@@ -6,6 +6,7 @@ using System.Data;
 using System.Data.SqlClient;
 using System.Linq;
 using System.Threading.Tasks;
+using WebAPICoreDapper.Dtos;
 using WebAPICoreDapper.Models;
 
 namespace WebAPICoreDapper.Controllers
@@ -50,6 +51,37 @@ namespace WebAPICoreDapper.Controllers
                 var result = await conn.QueryAsync<Product>("Get_Product_By_Id", paramaters, null, null, CommandType.StoredProcedure);
 
                 return result.Single();
+            }
+        }
+
+        [HttpGet("paging",Name = "GetPaging")]
+        public async Task<PagedResult<Product>> GetPaging(string keyword, int categoryId, int pageIndex, int pageSize)
+        {
+            using (var conn = new SqlConnection(_connectionString))
+            {
+                if (conn.State == System.Data.ConnectionState.Closed)
+                    conn.Open();
+
+                var paramaters = new DynamicParameters();
+                paramaters.Add("@keyword", keyword);
+                paramaters.Add("@categoryId", categoryId);
+                paramaters.Add("@pageIndex", pageIndex);
+                paramaters.Add("@pageSize", pageSize);
+                paramaters.Add("@totalRow", dbType: DbType.Int32, direction: ParameterDirection.Output);
+
+                var result = await conn.QueryAsync<Product>("Get_Product_AllPaging", paramaters, null, null, CommandType.StoredProcedure);
+
+                int totalRow = paramaters.Get<int>("@totalRow");
+
+                var pagedResult = new PagedResult<Product>()
+                {
+                    Items = result.ToList(),
+                    TotalRow = totalRow,
+                    PageIndex = pageIndex,
+                    PageSize = pageSize
+                };
+
+                return pagedResult;
             }
         }
 
