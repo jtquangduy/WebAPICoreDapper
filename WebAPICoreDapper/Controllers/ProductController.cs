@@ -7,6 +7,7 @@ using System.Data.SqlClient;
 using System.Linq;
 using System.Threading.Tasks;
 using WebAPICoreDapper.Dtos;
+using WebAPICoreDapper.Filters;
 using WebAPICoreDapper.Models;
 
 namespace WebAPICoreDapper.Controllers
@@ -87,9 +88,9 @@ namespace WebAPICoreDapper.Controllers
 
         // POST: api/Product
         [HttpPost]
-        public async Task<int> Post([FromBody] Product product)
+        [ValidateModel]
+        public async Task<IActionResult> Post([FromBody] Product product)
         {
-            int newId = 0;
             using (var conn = new SqlConnection(_connectionString))
             {
                 if (conn.State == System.Data.ConnectionState.Closed)
@@ -104,15 +105,16 @@ namespace WebAPICoreDapper.Controllers
 
                 var result = await conn.ExecuteAsync("Create_Product", parameters, null, null, CommandType.StoredProcedure);
 
-                newId = parameters.Get<int>("@id");
-            }
+                int newId = parameters.Get<int>("@id");
 
-            return newId;
+                return Ok(newId); 
+            }
         }
 
         // PUT: api/Product/5
         [HttpPut("{id}")]
-        public async Task Put(int id, [FromBody] Product product)
+        [ValidateModel]
+        public async Task<IActionResult> Put(int id, [FromBody] Product product)
         {
             using (var conn = new SqlConnection(_connectionString))
             {
@@ -127,6 +129,8 @@ namespace WebAPICoreDapper.Controllers
                 parameters.Add("@imageUrl", product.ImageUrl);
 
                 await conn.ExecuteAsync("Update_Product", parameters, null, null, CommandType.StoredProcedure);
+
+                return Ok();
             }
         }
 

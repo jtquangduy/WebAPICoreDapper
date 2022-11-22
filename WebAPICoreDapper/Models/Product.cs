@@ -1,7 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
+using System.ComponentModel.DataAnnotations;
 
 namespace WebAPICoreDapper.Models
 {
@@ -9,6 +7,7 @@ namespace WebAPICoreDapper.Models
     {
         public int Id { get; set; }
 
+        [Required]
         public string Sku { get; set; }
 
         public float Price { get; set; }
