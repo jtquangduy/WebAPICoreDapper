@@ -1,6 +1,7 @@
 ﻿using Dapper;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
 using System.Data;
@@ -18,17 +19,20 @@ namespace WebAPICoreDapper.Controllers
     public class ProductController : ControllerBase
     {
         private readonly string _connectionString;
+        private readonly ILogger<ProductController> _logger;
 
-        public ProductController(IConfiguration configuration)
+        public ProductController(IConfiguration configuration, ILogger<ProductController> logger)
         {
             _connectionString = configuration.GetConnectionString("DbConnectionString");
+            _logger = logger;
         }
 
         // GET: api/Product
         [HttpGet]
         public async Task<IEnumerable<Product>> Get()
         {
-            throw new Exception("test");
+            _logger.LogError("Test product controller");
+
             using (var conn = new SqlConnection(_connectionString))
             {
                 if (conn.State == System.Data.ConnectionState.Closed)
@@ -57,7 +61,7 @@ namespace WebAPICoreDapper.Controllers
             }
         }
 
-        [HttpGet("paging",Name = "GetPaging")]
+        [HttpGet("paging", Name = "GetPaging")]
         public async Task<PagedResult<Product>> GetPaging(string keyword, int categoryId, int pageIndex, int pageSize)
         {
             using (var conn = new SqlConnection(_connectionString))
@@ -109,7 +113,7 @@ namespace WebAPICoreDapper.Controllers
 
                 int newId = parameters.Get<int>("@id");
 
-                return Ok(newId); 
+                return Ok(newId);
             }
         }
 
