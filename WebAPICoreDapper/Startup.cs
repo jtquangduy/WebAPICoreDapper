@@ -1,15 +1,22 @@
 ﻿using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Localization;
+using Microsoft.AspNetCore.Localization.Routing;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Razor;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
 using Swashbuckle.AspNetCore.Swagger;
+using System.Globalization;
 using System.IO;
 using System.Net;
+using System.Reflection;
+using WebAPICoreDapper.Resources;
 
 namespace WebAPICoreDapper
 {
@@ -25,6 +32,41 @@ namespace WebAPICoreDapper
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
+            var supportedCultures = new[]
+               {
+                    new CultureInfo("en-US"),
+                    new CultureInfo("vi-VN"),
+                };
+
+            var options = new RequestLocalizationOptions()
+            {
+                DefaultRequestCulture = new RequestCulture(culture: "vi-VN", uiCulture: "vi-VN"),
+                SupportedCultures = supportedCultures,
+                SupportedUICultures = supportedCultures
+            };
+
+            options.RequestCultureProviders = new[]
+            {
+                 new RouteDataRequestCultureProvider() { Options = options }
+            };
+
+            services.AddSingleton(options);
+            services.AddSingleton<LocService>();
+
+
+            services.AddLocalization(otp => otp.ResourcesPath = "Resources");
+
+            services.AddMvc()
+                .AddViewLocalization(LanguageViewLocationExpanderFormat.Suffix)
+                 .AddDataAnnotationsLocalization(otp =>
+                 {
+                     otp.DataAnnotationLocalizerProvider = (type, factory) =>
+                     {
+                         var assemblyName = new AssemblyName(typeof(SharedResource).GetTypeInfo().Assembly.FullName);
+                         return factory.Create("SharedResource", assemblyName.Name);
+                     };
+                 });
+
             services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_1)
                 .AddJsonOptions(opt =>
                 {
@@ -42,6 +84,9 @@ namespace WebAPICoreDapper
         public void Configure(IApplicationBuilder app, IHostingEnvironment env, ILoggerFactory loggerFactory)
         {
             loggerFactory.AddFile(Configuration.GetSection("Logging"));
+
+            var locOptions = app.ApplicationServices.GetService<IOptions<RequestLocalizationOptions>>();
+            app.UseRequestLocalization(locOptions.Value);
 
             app.UseExceptionHandler(options =>
             {

@@ -5,7 +5,17 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <EmbeddedResource Remove="Resources\SharedResource.en.resx" />
+    <EmbeddedResource Remove="Resources\SharedResource.vi.resx" />
+  </ItemGroup>
+
+  <ItemGroup>
     <Folder Include="wwwroot\" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="Resources\SharedResource.en.resx" />
+    <None Include="Resources\SharedResource.vi.resx" />
   </ItemGroup>
 
   <ItemGroup>
