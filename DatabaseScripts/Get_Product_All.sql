@@ -7,10 +7,35 @@ GO
 -- Create date: 11/11/2022
 -- Description:	Select all records
 -- =============================================
+
+--Exec Get_Product_All 'en-US'
+
 CREATE OR ALTER PROCEDURE Get_Product_All
+	@language varchar(5)
 AS
 BEGIN
 	SET NOCOUNT ON;
 
-    select Id,Sku,Price,DiscountPrice,ImageUrl,CreatedAt,IsActive,ViewCount from Products
+    select 
+		p.Id,
+		p.Sku,
+		p.Price,
+		p.DiscountPrice,
+		p.ImageUrl,
+		p.CreatedAt,
+		p.IsActive,
+		p.ViewCount,
+		pt.Name,
+		pt.Content,
+		pt.Description,
+		pt.SeoAlias,
+		pt.SeoDescription,
+		pt.SeoKeyword,
+		pt.SeoTitle,
+		pt.LanguageId
+	from Products p 
+	inner join ProductTranslations pt 
+	on p.Id = pt.ProductId
+	where pt.LanguageId = @language
+
 END
