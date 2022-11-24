@@ -18,12 +18,14 @@ AS
 BEGIN
 	SET NOCOUNT ON;
 
-	select @totalRow = count(*) 
-	from Products p inner join ProductTranslations pt on p.Id = pt.ProductId
+	select @totalRow = count(*) from Products p 
+	inner join ProductTranslations pt on p.Id = pt.ProductId
+	left join ProductInCategories pic on p.Id = pic.ProductId
+	left join Categories c on c.Id = pic.CategoryId
 	where (@keyword is null or p.Sku like @keyword +'%') and p.IsActive = 1
+	and pic.CategoryId = @categoryId
 
-	select 
-		p.Id,
+	select p.Id,
 		p.Sku,
 		p.Price,
 		p.DiscountPrice,
@@ -38,14 +40,17 @@ BEGIN
 		pt.SeoDescription,
 		pt.SeoKeyword,
 		pt.SeoTitle,
-		pt.LanguageId
-	from Products p inner join ProductTranslations pt on p.Id = pt.ProductId
+		pt.LanguageId,
+		c.Name as CategoryName
+	from Products p 
+	inner join ProductTranslations pt on p.Id = pt.ProductId 
+	left join ProductInCategories pic on p.Id = pic.ProductId
+	left join Categories c on c.Id = pic.CategoryId
 	where (@keyword is null or p.Sku like @keyword +'%')
 	and pt.LanguageId = @language
 	and p.IsActive = 1
+	and pic.CategoryId = @categoryId
 	order by p.CreatedAt desc
 	offset (@pageIndex - 1) * @pageSize rows
 	fetch next @pageSize row only
-
 END
-GO

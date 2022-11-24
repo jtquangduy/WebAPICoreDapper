@@ -20,13 +20,12 @@ CREATE OR ALTER PROCEDURE [dbo].[Create_Product]
 	@isActive bit,
 	@imageUrl nvarchar(255),
 	@language varchar(5),
+	@categoryIds varchar(50),
 	@id int output
 AS
 BEGIN
 	SET NOCOUNT ON;
-
 	set xact_abort on;
-
 	begin tran
 	begin try
 		insert into Products(Sku,Price,IsActive,ImageUrl,CreatedAt,ViewCount,RateTotal,RateCount)
@@ -35,14 +34,18 @@ BEGIN
 
 		insert into ProductTranslations(ProductId,LanguageId,Content,Name,Description,SeoDescription,SeoAlias,SeoTitle,SeoKeyword)
 		values(@id,@language,@content,@name,@description,@seoDescription,@seoAlias,@seoTitle,@seoKeyword)
+
+		delete from ProductInCategories where ProductId = @id
+
+		insert into ProductInCategories
+	    select @id as ProductId,cast(String as int) as CategoryId from ufn_CSVToTable(@categoryIds,',')
 	commit
 	end try
 	begin catch
 		rollback
-			declare @ErrorMessage VARCHAR(2000)
-			select @ErrorMessage = 'Lỗi: ' + ERROR_MESSAGE()
-			raiserror(@ErrorMessage,16,1)
+			DECLARE @ErrorMessage VARCHAR(2000)
+			SELECT @ErrorMessage = 'Lỗi: ' + ERROR_MESSAGE()
+			RAISERROR(@ErrorMessage, 16, 1)
 	end catch
 
-	
 END

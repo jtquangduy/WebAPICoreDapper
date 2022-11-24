@@ -20,29 +20,36 @@ CREATE OR ALTER PROCEDURE [dbo].[Update_Product]
 	@isActive bit,
 	@imageUrl nvarchar(255),
 	@language varchar(5),
+	@categoryIds varchar(50),
 	@id int output
 AS
 BEGIN
 	SET NOCOUNT ON;
-
+   SET NOCOUNT ON;
 	set xact_abort on;
-
 	begin tran
 	begin try
-		update Products set Sku=@sku, Price = @price, IsActive = @isActive, ImageUrl = @imageUrl
-		where Id=@id
+		update Products set Sku = @sku,Price = @price, IsActive = @isActive,ImageUrl=@imageUrl
+		where Id = @id
 
-		update ProductTranslations set Content=@content, Name=@name, Description=@description, SeoDescription=@seoDescription, SeoAlias= @seoAlias, SeoTitle=@seoTitle, SeoKeyword=@seoKeyword
-		where ProductId=@id and LanguageId=@language
+		update ProductTranslations 
+			set Content = @content,
+			Name = @name,
+			Description = @description,
+			SeoDescription= @seoDescription,
+			SeoAlias = @seoAlias,
+			SeoTitle = @seoTitle,
+			SeoKeyword = @seoKeyword
+		where ProductId = @id and LanguageId = @language
 
+		insert into ProductInCategories
+		select @id as ProductId,cast(String as int) as CategoryId from ufn_CSVToTable(@categoryIds,',')
 	commit
 	end try
 	begin catch
 		rollback
-			declare @ErrorMessage VARCHAR(2000)
-			select @ErrorMessage = 'Lỗi: ' + ERROR_MESSAGE()
-			raiserror(@ErrorMessage,16,1)
+			DECLARE @ErrorMessage VARCHAR(2000)
+			SELECT @ErrorMessage = 'Lỗi: ' + ERROR_MESSAGE()
+			RAISERROR(@ErrorMessage, 16, 1)
 	end catch
-
-	
 END
